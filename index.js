@@ -4,47 +4,97 @@ import chalk from 'chalk';
 import chalkAnimation from 'chalk-animation';
 import inquirer from 'inquirer';
 
-// ------------------------------ OpenAI API ------------------------------
+// ------------------------------ API ------------------------------
 
-const genAI = new GoogleGenerativeAI("YOUR_API_KEY");
-
-async function askGoogle(currentScene) {
-    console.log(chalk.redBright(currentScene))
+const __GOOGLE_API_KEY__ = ''
+const genAI = new GoogleGenerativeAI(__GOOGLE_API_KEY__);
+const generationConfig = {
+    stopSequences: ["red"],
+    maxOutputTokens:500,
+    temperature: 0.9,
+    topP: 0.1,
+    topK: 16,
+};
+let actionHold = undefined;
+let storyLine = undefined
+let chat = undefined;
+let startFlag = 0;
+async function askGoogle() {
 
     //our-model
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     // user-response:
-    const { action } = await inquirer.prompt({
-        type: 'input',
-        name: 'action',
-        message: 'User: ',
-    });
-    const generationConfig = {
-        stopSequences: ["red"],
-        maxOutputTokens: 200,
-        temperature: 0.9,
-        topP: 0.1,
-        topK: 16,
-      };
-    const chat = model.startChat(
-        {
-            history:[
-                {
-                    role:'user',
-                    parts:[{text:action}],
-                },
-                {
-                    role:'model',
-                    parts:[{text:currentScene}]
-                }
-            ],
-            generationConfig:generationConfig
-        }
-    );
-    const chatResult = await chat.sendMessage(action);
+    if (currentScene == undefined) {
+        const { action } = await inquirer.prompt({
+            type: 'list',
+            name: 'action',
+            message: `Choose Option`,
+            choices: [
+                'Let Survive The Zombies Apocalypse.',
+            ]
+        });
+        console.log("Action ", action)
+        actionHold = action
+        console.log("Choose You're Scenario")
+        currentScene = await inquirer.prompt({
+            type: 'list',
+            name: 'currentScene',
+            message: `Choose Option`,
+            choices: [
+                'Nano-Zombies: The undead are infected by nanobots that constantly repair their decaying bodies, making them nearly indestructible.',
+                'Cyber-Zombies: Advanced AI technology has taken control of human corpses, turning them into relentless killing machines.'
+            ]
+        });
+        console.log("Current Scene = ",currentScene)
+    }
+    else{
+
+        actionHold = await inquirer.prompt({
+            type: 'input',
+            name: 'actionHold',
+            message: 'Enter Your Input:'
+        });
+        actionHold = actionHold.actionHold.split(',').map(item => item.trim());
+    }
+    console.log("actionHold = ", actionHold);
+    if (startFlag == 0) {
+        chat = await model.startChat(
+            {
+                history: [
+                    {
+                        role: 'user',
+                        parts: [{ text: `"${actionHold}"` }],
+                    },
+                    {
+                        role: 'model',
+                        parts:[
+                            {text:`'${currentScene}'`}
+                        ]
+                    },
+
+                ],
+                generationConfig: generationConfig
+            }
+        );
+        startFlag = 1;
+    }
+
+    const chatResult = await chat.sendMessage(actionHold);
     const response = await chatResult.response;
-    return {response:response.text().trim().replace("*",""),Useraction:action};
+    if (response.text() != undefined) {
+        console.log(`\n Response:\n${chalk.yellow(response.text())}`);
+    }
+    const { continueGame } = await inquirer.prompt({
+        type: 'confirm',
+        name: 'continueGame',
+        message: 'Do you want to continue the game?',
+        default: true
+    });
+
+    if(!continueGame){
+        return;
+    }
 }
 
 // ------------------------------ CLI Interface ------------------------------
@@ -61,43 +111,33 @@ async function welcome() {
 
 await welcome();
 
-async function askName() {
-    const { name } = await inquirer.prompt({
-        type: 'input',
-        name: 'name',
-        message: 'What is your name?',
-        default: 'Player'
-    });
-    console.log(`Hello ${name}`);
 
-    return name;
-}
-
-//welcomes
-
-// const p_name = await askName();
 
 //start game
 
-let currentScene = "You find yourself in the MALL inside the city , now overrun by the undead. The skyscrapers, once symbols of human achievement, are now crumbling. Zombies roams inside the MALL, their vacant eyes searching for prey. You're All alone, with dead silence surrounding you. You have to find a way to escape the MALL and reach the safe zone. You have to make the right choices to survive. Good luck!";
+let currentScene = undefined;
 
 async function startGame() {
-    while (true) {
-       
-        const res = await askGoogle(currentScene)
-        console.log(`Response: ${chalk.yellow(res.response)}`);
-        
-        currentScene = res.response;
-        const { continueGame } = await inquirer.prompt({
-            type: 'confirm',
-            name: 'continueGame',
-            message: 'Do you want to continue the game?',
-            default: true
-        });
+    // while (true) {
 
-        if (!continueGame) {
-            break;
-        }
+    //     const res = await askGoogle(currentScene)
+    //     console.log(`\n Response:\n${chalk.yellow(res.response)}`);
+
+    //     currentScene = res.response;
+    //     const { continueGame } = await inquirer.prompt({
+    //         type: 'confirm',
+    //         name: 'continueGame',
+    //         message: 'Do you want to continue the game?',
+    //         default: true
+    //     });
+
+    //     if (!continueGame) {
+    //         break;
+    //     }
+    // }
+    while (true) {
+        await askGoogle()
     }
+
 }
-startGame();
+await startGame();
