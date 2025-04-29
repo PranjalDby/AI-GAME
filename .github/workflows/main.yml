@@ -22,8 +22,8 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Run build (optional)
-        run: npm run build   # Only if you have a build step (like TypeScript)
+      # - name: Run build (optional)
+      #   run: npm run build   # Only if you have a build step (like TypeScript)
 
       - name: Publish package
         run: npm publish
