@@ -18,9 +18,7 @@ jobs:
         with:
           node-version: '20'    # Or your required Node version
           registry-url: 'https://registry.npmjs.org/'
-          
-      - name: Adding User
-        run: npm adduser
+
         
       - name: Install dependencies
         run: npm install
