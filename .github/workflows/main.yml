@@ -3,33 +3,22 @@ name: Publish to npm
 on:
   push:
     branches:
-      - main  # or 'master' or whatever branch you want to trigger publishing
+      - main
 
 jobs:
   publish:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '20'    # Or your required Node version
-          registry-url: 'https://registry.npmjs.org/'
+          node-version: 20
+          registry-url: https://registry.npmjs.org/
 
-      - name: Configure npm
-        run: | 
-          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          
       - name: Install dependencies
-        run: npm install
-
-      # - name: Run build (optional)
-      #   run: npm run build   # Only if you have a build step (like TypeScript)
+        run: npm ci
 
       - name: Publish package
         run: npm publish
