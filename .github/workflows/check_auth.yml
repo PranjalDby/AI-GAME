@@ -8,13 +8,24 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - name: Verify token presence
+      - name: Check secret length
         run: |
-          if [ -z "$NODE_AUTH_TOKEN" ]; then
-            echo "❌ NODE_AUTH_TOKEN is empty"
+          if [ ${#NODE_AUTH_TOKEN} -lt 20 ]; then
+            echo "❌ Token missing or too short"
             exit 1
           else
-            echo "✅ NODE_AUTH_TOKEN is set"
+            echo "✅ Token present"
           fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # - name: Verify token presence
+      #   run: |
+      #     if [ -z "$NODE_AUTH_TOKEN" ]; then
+      #       echo "❌ NODE_AUTH_TOKEN is empty"
+      #       exit 1
+      #     else
+      #       echo "✅ NODE_AUTH_TOKEN is set"
+      #     fi
+      #   env:
+      #     NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
